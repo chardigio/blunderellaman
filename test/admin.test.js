@@ -50,3 +50,19 @@ test('shortDate reads as a month and day', () => {
 test('escapeHtml neutralises a hostile referrer name', () => {
 	assert.equal(admin.escapeHtml('<img src=x onerror=1>'), '&lt;img src=x onerror=1&gt;');
 });
+
+test('shareLinks builds one tagged URL per platform', () => {
+	const links = admin.shareLinks();
+	assert.deepEqual(
+		links.map(l => l.tag),
+		['tiktok_bio', 'instagram_bio', 'youtube_description', 'twitch_panels', null],
+	);
+	assert.equal(links[0].url, 'https://blunderellaman.com/?utm_source=tiktok_bio');
+	assert.equal(links[1].label, 'Instagram bio');
+	assert.equal(links[4].url, 'https://blunderellaman.com/');
+});
+
+test('shareLink encodes the tag', () => {
+	assert.equal(admin.shareLink('a b&c'), 'https://blunderellaman.com/?utm_source=a%20b%26c');
+	assert.equal(admin.shareLink(null), 'https://blunderellaman.com/');
+});

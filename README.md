@@ -44,3 +44,4 @@ same key vector.
 
 To tag a link you post, add `?utm_source=<name>`, for example
 `https://blunderellaman.com/?utm_source=tiktok_bio`. The name shows on the stats page.
+The admin panel has a Share links section with a ready-to-copy tagged link for each platform.

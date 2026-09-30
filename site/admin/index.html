@@ -83,6 +83,17 @@ td{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;width:4
 .share{display:inline-block;height:6px;width:calc(var(--w) * .6);max-width:60%;background:var(--line);border-radius:3px;margin-right:8px;vertical-align:middle}
 td.empty{text-align:left;color:var(--muted);white-space:normal;width:auto}
 .note{color:var(--muted);font-size:13px;margin-top:16px}
+
+/* share links */
+#share .hint{margin:0 0 4px;font-size:14px;color:var(--muted)}
+.share-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px}
+.share-list li{display:flex;align-items:center;gap:10px;min-width:0}
+.share-list .slabel{flex:none;width:150px;font-weight:600;font-size:14px}
+.share-list code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  background:var(--ink);border:1px solid var(--line);border-radius:8px;
+  padding:7px 10px;font-size:13px;color:var(--muted);font-family:ui-monospace,monospace}
+.share-list button{flex:none}
+@media (max-width:560px){.share-list .slabel{width:112px}}
 </style>
 </head>
 <body>
@@ -103,6 +114,11 @@ td.empty{text-align:left;color:var(--muted);white-space:normal;width:auto}
       </div>
       <button type="button" id="signout">Sign out</button>
     </div>
+    <section class="panel" id="share">
+      <h2>Share links</h2>
+      <p class="hint">Tagged links, ready to paste into each platform. The tag shows up under &ldquo;utm_source tags&rdquo; below.</p>
+      <ul class="share-list"></ul>
+    </section>
     <div id="ranges" role="group" aria-label="Time range"></div>
     <div id="tiles"></div>
     <section class="panel" id="chart">

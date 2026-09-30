@@ -24,6 +24,26 @@
 	];
 	const RANGE_DAYS = {'7d': 7, '30d': 30, '90d': 90};
 
+	const SITE_URL = 'https://blunderellaman.com/';
+
+	// One tagged link per place the URL gets posted, so views land in the right
+	// "utm_source tags" row. `tag: null` is the plain, untagged link.
+	const SHARE_SOURCES = [
+		{label: 'TikTok bio', tag: 'tiktok_bio'},
+		{label: 'Instagram bio', tag: 'instagram_bio'},
+		{label: 'YouTube description', tag: 'youtube_description'},
+		{label: 'Twitch panels', tag: 'twitch_panels'},
+		{label: 'Plain link (no tag)', tag: null},
+	];
+
+	function shareLink(tag) {
+		return tag ? SITE_URL + '?utm_source=' + encodeURIComponent(tag) : SITE_URL;
+	}
+
+	function shareLinks() {
+		return SHARE_SOURCES.map(src => ({label: src.label, tag: src.tag, url: shareLink(src.tag)}));
+	}
+
 	// data-link names on the home page, shown as people would say them.
 	const LINK_LABELS = {
 		twitch: 'Twitch',
@@ -80,6 +100,41 @@
 
 	function escapeHtml(s) {
 		return String(s).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'})[c]);
+	}
+
+
+	function copyText(doc, text) {
+		if (global.navigator && global.navigator.clipboard && global.navigator.clipboard.writeText) {
+			return global.navigator.clipboard.writeText(text);
+		}
+		return new Promise((resolve, reject) => {
+			const ta = doc.createElement('textarea');
+			ta.value = text;
+			ta.style.position = 'fixed';
+			ta.style.opacity = '0';
+			doc.body.appendChild(ta);
+			ta.select();
+			try {
+				if (doc.execCommand('copy')) resolve();
+				else reject(new Error('copy_failed'));
+			} catch (e) {
+				reject(e);
+			}
+			doc.body.removeChild(ta);
+		});
+	}
+
+	function renderShare(doc) {
+		const list = doc.querySelector('#share .share-list');
+		list.innerHTML = shareLinks()
+			.map(
+				(s, i) => `<li>
+				<span class="slabel">${escapeHtml(s.label)}</span>
+				<code>${escapeHtml(s.url)}</code>
+				<button type="button" data-copy="${i}">Copy</button>
+			</li>`,
+			)
+			.join('');
 	}
 
 	// ---- browser only below -------------------------------------------------------------
@@ -177,6 +232,21 @@
 		doc.getElementById('ranges').innerHTML = RANGES.map(
 			r => `<button type="button" data-range="${r.id}" aria-pressed="false">${r.label}</button>`,
 		).join('');
+		doc.getElementById('share').addEventListener('click', e => {
+			const button = e.target.closest('button[data-copy]');
+			if (!button) return;
+			const url = shareLinks()[Number(button.dataset.copy)].url;
+			button.disabled = true;
+			copyText(doc, url).then(
+				() => (button.textContent = 'Copied ✓'),
+				() => (button.textContent = 'Copy failed'),
+			);
+			setTimeout(() => {
+				button.textContent = 'Copy';
+				button.disabled = false;
+			}, 1500);
+		});
+
 		doc.getElementById('ranges').addEventListener('click', e => {
 			const button = e.target.closest('button');
 			if (!button || !stats) return;
@@ -191,6 +261,7 @@
 			storage(s => s.setItem(STORAGE_KEY, key));
 			signin.hidden = true;
 			dash.hidden = false;
+			renderShare(doc);
 			renderStats(doc, stats, range);
 			return true;
 		}
@@ -236,7 +307,7 @@
 		signin.hidden = false;
 	}
 
-	const api = {adminKey, dataPath, formatCount, formatRate, bars, shortDate, escapeHtml, start};
+	const api = {adminKey, dataPath, formatCount, formatRate, bars, shortDate, escapeHtml, shareLink, shareLinks, start};
 	if (typeof module !== 'undefined' && module.exports) {
 		module.exports = api;
 	} else {

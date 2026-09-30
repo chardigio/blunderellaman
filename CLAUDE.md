@@ -12,6 +12,7 @@ Static link page for the blunderellaman chess streams. Read `README.md` first.
   here needs the same change there.
 * A new link on the home page needs a `data-link="<name>"` attribute, or its taps are not
   counted. Add a label for the name in `LINK_LABELS` in `site/admin/admin.js`.
+* The admin panel's Share links section is driven by `SHARE_SOURCES` in `site/admin/admin.js`.
 * The page must work at 390px wide with no sideways scroll. Check it on a phone-sized window.
 * Work on a branch named for the Linear issue (for example `STA-1234`). Open a PR to `main`.
   A merge to `main` deploys.
