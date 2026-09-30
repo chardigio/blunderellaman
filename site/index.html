@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>digimate — chess streams</title>
+<meta name="description" content="digimate: chess on Twitch, YouTube, TikTok and Instagram, plus a live chess.com rating tracker.">
+<link rel="canonical" href="https://blunderellaman.com/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://blunderellaman.com/">
+<meta property="og:title" content="digimate: chess streams">
+<meta property="og:description" content="Chess on stream. Blunders included. Twitch, YouTube, TikTok, Instagram, and a live chess.com rating.">
+<meta name="theme-color" content="#16133A">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♞</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16133A;
+  --board-dark:#2B2760;
+  --board-light:#DCD6F7;
+  --paper:#F6F4FF;
+  --pink:#FF4F9A;
+  --win:#3FCB8E;
+  --loss:#FF6B6B;
+  --draw:#A9A3C9;
+  --text:#F6F4FF;
+  --muted:#B4ADE0;
+  --panel:#1E1A4A;
+  --line:#3A3478;
+  --font:"Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0;min-height:100%;
+  background:var(--ink);
+  color:var(--text);
+  font-family:var(--font);
+  font-size:17px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+/* checkerboard backdrop that fades out */
+.board{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    conic-gradient(var(--board-dark) 25%, transparent 0 50%, var(--board-dark) 0 75%, transparent 0) 0 0/88px 88px;
+  opacity:.55;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0,transparent 70%);
+          mask-image:linear-gradient(to bottom,#000 0,transparent 70%);
+}
+main{
+  position:relative;z-index:1;
+  max-width:560px;margin:0 auto;
+  padding:56px 20px 64px;
+}
+
+/* ---------- header ---------- */
+header{display:flex;align-items:center;gap:18px;margin-bottom:40px}
+.avatar{
+  width:84px;height:84px;flex:none;
+  border-radius:18px;
+  background:var(--board-light);
+  display:grid;place-items:center;
+  font-size:52px;color:var(--ink);
+  overflow:hidden;
+  box-shadow:6px 6px 0 var(--pink);
+}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+h1{
+  margin:0;
+  font-size:clamp(44px,11vw,64px);
+  font-weight:800;line-height:.95;letter-spacing:-.035em;
+}
+.tag{margin:6px 0 0;color:var(--muted);font-size:17px}
+
+/* ---------- links ---------- */
+.links{list-style:none;margin:0 0 44px;padding:0;display:grid;gap:12px}
+.links a{
+  display:flex;align-items:center;gap:16px;
+  padding:16px 18px;
+  background:var(--paper);color:var(--ink);
+  text-decoration:none;
+  border-radius:14px;
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.links a:hover{transform:translate(-3px,-3px);box-shadow:3px 3px 0 var(--pink)}
+.links a:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+.sq{
+  width:38px;height:38px;flex:none;border-radius:9px;
+  display:grid;place-items:center;
+  font-size:22px;line-height:1;color:#fff;
+}
+.links .name{font-weight:600;font-size:19px;line-height:1.2}
+.links .handle{display:block;font-size:14px;color:#5B5591}
+.links .go{margin-left:auto;font-size:22px;color:#8A84BF}
+
+/* ---------- rating tracker ---------- */
+.tracker{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:22px 20px 20px;
+}
+.tracker-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.tracker h2{margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em}
+.tracker h2 a{color:inherit;text-decoration:none;border-bottom:2px solid var(--pink)}
+.status{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--win);box-shadow:0 0 0 0 var(--win);animation:pulse 2s infinite}
+.dot.off{background:var(--draw);animation:none}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(63,203,142,.6)}70%{box-shadow:0 0 0 8px rgba(63,203,142,0)}100%{box-shadow:0 0 0 0 rgba(63,203,142,0)}}
+
+.modes{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:18px 0 0}
+.mode{
+  background:var(--ink);
+  border-radius:14px;padding:14px 14px 12px;
+  border:1px solid var(--line);
+}
+.mode.primary{grid-column:1/-1;background:var(--board-light);color:var(--ink);border:none}
+.mode .label{font-size:15px;font-weight:600;display:flex;align-items:center;gap:6px}
+.mode .rating{font-size:44px;font-weight:800;letter-spacing:-.03em;line-height:1;margin:6px 0 4px;font-variant-numeric:tabular-nums}
+.mode.primary .rating{font-size:clamp(64px,18vw,92px)}
+.mode .meta{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.mode.primary .meta{color:#4E4889}
+.rec b{font-weight:600}
+.rec .w{color:var(--win)} .rec .l{color:var(--loss)}
+.mode.primary .rec .w{color:#138C5A} .mode.primary .rec .l{color:#C73A3A}
+
+.recent{margin-top:18px}
+.recent h3{margin:0 0 8px;font-size:15px;font-weight:600;color:var(--muted)}
+.strip{display:flex;gap:6px;flex-wrap:wrap}
+.g{
+  width:38px;height:38px;border-radius:8px;
+  display:grid;place-items:center;
+  font-size:13px;font-weight:600;color:var(--ink);
+  text-decoration:none;
+}
+.g.win{background:var(--win)} .g.loss{background:var(--loss)} .g.draw{background:var(--draw)}
+.g:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
+
+.tracker-foot{display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:10px;flex-wrap:wrap}
+button{
+  font:inherit;font-size:14px;font-weight:600;
+  background:transparent;color:var(--text);
+  border:1px solid var(--line);border-radius:10px;
+  padding:8px 14px;cursor:pointer;
+}
+button:hover{border-color:var(--pink)}
+button:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
+.updated{font-size:13px;color:var(--muted)}
+.error{color:var(--loss);font-size:14px;margin:14px 0 0}
+
+.skeleton .rating{color:transparent;background:linear-gradient(90deg,var(--line),var(--board-dark),var(--line));background-size:200% 100%;border-radius:8px;animation:shimmer 1.2s infinite;width:60%}
+@keyframes shimmer{to{background-position:-200% 0}}
+
+footer{margin-top:40px;text-align:center;font-size:13px;color:var(--muted)}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+@media (max-width:380px){
+  header{gap:14px}
+  .avatar{width:68px;height:68px;font-size:40px}
+}
+</style>
+</head>
+<body>
+<div class="board" aria-hidden="true"></div>
+<main>
+  <header>
+    <div class="avatar" id="avatar" aria-hidden="true">♞</div>
+    <div>
+      <h1>digimate</h1>
+      <p class="tag">Chess on stream. Blunders included.</p>
+    </div>
+  </header>
+
+  <ul class="links">
+    <li><a data-link="twitch" href="https://www.twitch.tv/digimate" target="_blank" rel="noopener">
+      <span class="sq" style="background:#8B5CF6">▶</span>
+      <span><span class="name">Watch live on Twitch</span><span class="handle">twitch.tv/digimate</span></span>
+      <span class="go" aria-hidden="true">↗</span></a></li>
+    <li><a data-link="youtube" href="https://www.youtube.com/@digimatechess" target="_blank" rel="noopener">
+      <span class="sq" style="background:#E5484D">▶</span>
+      <span><span class="name">YouTube</span><span class="handle">@digimatechess</span></span>
+      <span class="go" aria-hidden="true">↗</span></a></li>
+    <li><a data-link="tiktok" href="https://www.tiktok.com/@digimatelive" target="_blank" rel="noopener">
+      <span class="sq" style="background:#16133A">♪</span>
+      <span><span class="name">TikTok</span><span class="handle">@digimatelive</span></span>
+      <span class="go" aria-hidden="true">↗</span></a></li>
+    <li><a data-link="instagram" href="https://www.instagram.com/digimatechess/" target="_blank" rel="noopener">
+      <span class="sq" style="background:#FF4F9A">◉</span>
+      <span><span class="name">Instagram</span><span class="handle">@digimatechess</span></span>
+      <span class="go" aria-hidden="true">↗</span></a></li>
+    <li><a data-link="chesscom" href="https://www.chess.com/member/blunderellaman" target="_blank" rel="noopener">
+      <span class="sq" style="background:#3FCB8E">♟</span>
+      <span><span class="name">Play me on chess.com</span><span class="handle">blunderellaman</span></span>
+      <span class="go" aria-hidden="true">↗</span></a></li>
+  </ul>
+
+  <section class="tracker" aria-labelledby="t-title">
+    <div class="tracker-head">
+      <h2 id="t-title">Rating on <a data-link="chesscom_tracker" href="https://www.chess.com/member/blunderellaman" target="_blank" rel="noopener">chess.com</a></h2>
+      <span class="status" id="status"><span class="dot off"></span>Loading</span>
+    </div>
+
+    <div class="modes skeleton" id="modes" aria-live="polite">
+      <div class="mode primary"><div class="label">Rapid</div><div class="rating">0000</div><div class="meta">&nbsp;</div></div>
+      <div class="mode"><div class="label">Blitz</div><div class="rating">0000</div><div class="meta">&nbsp;</div></div>
+      <div class="mode"><div class="label">Bullet</div><div class="rating">0000</div><div class="meta">&nbsp;</div></div>
+    </div>
+
+    <div class="recent" id="recent" hidden>
+      <h3>Last 10 games</h3>
+      <div class="strip" id="strip"></div>
+    </div>
+
+    <p class="error" id="error" hidden></p>
+
+    <div class="tracker-foot">
+      <span class="updated" id="updated"></span>
+      <button type="button" id="refresh">Refresh</button>
+    </div>
+  </section>
+
+  <footer>Ratings update automatically every few minutes.</footer>
+</main>
+
+<script>
+(() => {
+  const USER = "blunderellaman";
+  const API = "https://api.chess.com/pub/player/" + USER;
+  const REFRESH_MS = 5 * 60 * 1000;
+
+  const $ = id => document.getElementById(id);
+  const modesEl = $("modes"), statusEl = $("status"), errEl = $("error"),
+        updEl = $("updated"), recentEl = $("recent"), stripEl = $("strip");
+
+  const MODES = [
+    { key: "chess_rapid",  label: "Rapid",  icon: "⏱" },
+    { key: "chess_blitz",  label: "Blitz",  icon: "⚡" },
+    { key: "chess_bullet", label: "Bullet", icon: "•" },
+    { key: "chess_daily",  label: "Daily",  icon: "☀" },
+  ];
+
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+  async function getJSON(url){
+    const r = await fetch(url, { cache: "no-store" });
+    if (r.status === 404) throw new Error("not_found");
+    if (!r.ok) throw new Error("http_" + r.status);
+    return r.json();
+  }
+
+  function setStatus(live, text){
+    statusEl.innerHTML = `<span class="dot${live ? "" : " off"}"></span>${esc(text)}`;
+  }
+
+  function renderStats(stats){
+    const present = MODES.filter(m => stats[m.key] && stats[m.key].last);
+    if (!present.length){
+      modesEl.innerHTML = `<div class="mode primary"><div class="label">No rated games yet</div><div class="meta">Play a rated game on chess.com and it shows up here.</div></div>`;
+      return;
+    }
+    // Highest-activity mode becomes the big card
+    const games = m => { const r = stats[m.key].record || {}; return (r.win||0)+(r.loss||0)+(r.draw||0); };
+    present.sort((a,b) => games(b) - games(a));
+
+    let html = present.map((m, i) => {
+      const s = stats[m.key];
+      const rec = s.record || {};
+      const best = s.best ? s.best.rating : null;
+      return `<div class="mode${i === 0 ? " primary" : ""}">
+        <div class="label"><span aria-hidden="true">${m.icon}</span>${m.label}</div>
+        <div class="rating">${s.last.rating}</div>
+        <div class="meta rec">
+          <b class="w">${rec.win||0}W</b> <b class="l">${rec.loss||0}L</b> <b>${rec.draw||0}D</b>
+          ${best ? `&nbsp; Best ${best}` : ""}
+        </div>
+      </div>`;
+    }).join("");
+
+    if (stats.tactics && stats.tactics.highest){
+      html += `<div class="mode"><div class="label"><span aria-hidden="true">🧩</span>Puzzles</div>
+        <div class="rating">${stats.tactics.highest.rating}</div>
+        <div class="meta">Peak puzzle rating</div></div>`;
+    }
+    modesEl.innerHTML = html;
+    modesEl.classList.remove("skeleton");
+  }
+
+  async function renderRecent(){
+    try{
+      const { archives } = await getJSON(API + "/games/archives");
+      if (!archives || !archives.length) { recentEl.hidden = true; return; }
+      let all = [];
+      // walk back through months until we have 10 games
+      for (let i = archives.length - 1; i >= 0 && all.length < 10 && i >= archives.length - 3; i--){
+        const { games } = await getJSON(archives[i]);
+        all = all.concat((games || []).slice().reverse());
+      }
+      const last = all.slice(0, 10).reverse();
+      if (!last.length) { recentEl.hidden = true; return; }
+
+      stripEl.innerHTML = last.map(g => {
+        const me = g.white.username.toLowerCase() === USER ? g.white : g.black;
+        const opp = me === g.white ? g.black : g.white;
+        const res = me.result === "win" ? "win"
+          : ["agreed","repetition","stalemate","insufficient","50move","timevsinsufficient"].includes(me.result) ? "draw" : "loss";
+        const letter = res === "win" ? "W" : res === "loss" ? "L" : "D";
+        const title = `${letter} vs ${opp.username} (${opp.rating}) · ${g.time_class} · now ${me.rating}`;
+        return `<a class="g ${res}" data-link="game" href="${esc(g.url)}" target="_blank" rel="noopener" title="${esc(title)}" aria-label="${esc(title)}">${letter}</a>`;
+      }).join("");
+      recentEl.hidden = false;
+    }catch(e){
+      recentEl.hidden = true;
+    }
+  }
+
+  async function load(){
+    errEl.hidden = true;
+    setStatus(false, "Updating");
+    try{
+      const [stats, profile] = await Promise.all([
+        getJSON(API + "/stats"),
+        getJSON(API).catch(() => null),
+      ]);
+      renderStats(stats);
+      if (profile && profile.avatar){
+        const av = $("avatar");
+        av.innerHTML = "";
+        const img = new Image();
+        img.alt = "";
+        img.src = profile.avatar;
+        img.onerror = () => { av.textContent = "♞"; };
+        av.appendChild(img);
+      }
+      renderRecent();
+      setStatus(true, "Live");
+      updEl.textContent = "Updated " + new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    }catch(e){
+      setStatus(false, "Offline");
+      errEl.hidden = false;
+      errEl.textContent = e.message === "not_found"
+        ? `chess.com has no player named "${USER}". Check the username in the page's script.`
+        : "Couldn't reach chess.com. Ratings will retry automatically, or press Refresh.";
+    }
+  }
+
+  $("refresh").addEventListener("click", load);
+  load();
+  setInterval(load, REFRESH_MS);
+})();
+</script>
+<script src="/beacon.js"></script>
+<script>BlunderBeacon.start(document);</script>
+</body>
+</html>

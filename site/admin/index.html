@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>digimate stats</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♞</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16133A;
+  --board-light:#DCD6F7;
+  --pink:#FF4F9A;
+  --text:#F6F4FF;
+  --muted:#B4ADE0;
+  --panel:#1E1A4A;
+  --line:#3A3478;
+  --loss:#FF6B6B;
+  --font:"Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0;background:var(--ink);color:var(--text);
+  font-family:var(--font);font-size:16px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+main{max-width:760px;margin:0 auto;padding:max(32px,env(safe-area-inset-top)) 16px 56px}
+h1{margin:0;font-size:32px;font-weight:800;letter-spacing:-.03em}
+h2{margin:0 0 10px;font-size:16px;font-weight:600;color:var(--muted)}
+[hidden]{display:none!important}
+button,input{font:inherit}
+button{
+  background:transparent;color:var(--text);border:1px solid var(--line);
+  border-radius:10px;padding:8px 14px;cursor:pointer;font-size:14px;font-weight:600;
+}
+button:hover{border-color:var(--pink)}
+button:focus-visible,input:focus-visible,.bar:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
+
+/* sign-in */
+#signin{max-width:380px;margin:12vh auto 0;display:grid;gap:14px}
+#signin p{margin:0;color:var(--muted)}
+#signin input{
+  width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);
+  background:var(--panel);color:var(--text);font-size:17px;
+}
+#signin button[type=submit]{background:var(--pink);border-color:var(--pink);color:var(--ink);padding:12px}
+#signin button:disabled{opacity:.6;cursor:progress}
+#signin .error{color:var(--loss);margin:0;font-size:14px}
+
+/* dashboard */
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.head .sub{color:var(--muted);font-size:14px;margin-top:2px}
+#ranges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+#ranges button[aria-pressed=true]{background:var(--board-light);border-color:var(--board-light);color:var(--ink)}
+#tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.tile .label{font-size:13px;color:var(--muted)}
+.tile .value{font-size:30px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1;margin-top:4px}
+@media (max-width:560px){#tiles{grid-template-columns:repeat(2,1fr)}}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;min-width:0}
+.readout{font-size:14px;color:var(--text);min-height:1.45em;margin-bottom:10px;font-variant-numeric:tabular-nums}
+.plot{
+  height:160px;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));
+  gap:2px;align-items:end;border-bottom:1px solid var(--line);
+}
+.bar{height:100%;display:flex;align-items:flex-end;cursor:default}
+.bar span{display:block;width:100%;min-height:2px;background:var(--pink);border-radius:4px 4px 0 0}
+.bar:hover span,.bar:focus span{background:var(--board-light)}
+.axis{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:6px}
+
+#tables{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#tables .panel{margin:0}
+@media (max-width:560px){#tables{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:6px 0;border-top:1px solid var(--line);vertical-align:middle}
+tr:first-child th,tr:first-child td{border-top:none}
+th{text-align:left;font-weight:400;overflow-wrap:anywhere;padding-right:8px}
+td{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;width:40%}
+.share{display:inline-block;height:6px;width:calc(var(--w) * .6);max-width:60%;background:var(--line);border-radius:3px;margin-right:8px;vertical-align:middle}
+td.empty{text-align:left;color:var(--muted);white-space:normal;width:auto}
+.note{color:var(--muted);font-size:13px;margin-top:16px}
+</style>
+</head>
+<body>
+<main>
+  <form id="signin" hidden autocomplete="on">
+    <h1>digimate stats</h1>
+    <p>Type the admin passphrase.</p>
+    <input name="passphrase" type="password" autocomplete="current-password" required aria-label="Passphrase" autofocus>
+    <button type="submit">Open stats</button>
+    <p class="error" id="signin-error" role="alert" hidden></p>
+  </form>
+
+  <div id="dash" hidden>
+    <div class="head">
+      <div>
+        <h1>digimate stats</h1>
+        <div class="sub" id="updated"></div>
+      </div>
+      <button type="button" id="signout">Sign out</button>
+    </div>
+    <div id="ranges" role="group" aria-label="Time range"></div>
+    <div id="tiles"></div>
+    <section class="panel" id="chart">
+      <h2>Views</h2>
+      <div class="readout" aria-live="polite"></div>
+      <div class="plot"></div>
+      <div class="axis"></div>
+    </section>
+    <div id="tables"></div>
+    <p class="note">Days run midnight to midnight, New York time. The stats refresh every hour. Visitors are unique people in the range, by network and device.</p>
+  </div>
+</main>
+<script src="/admin/admin.js"></script>
+<script>BlunderAdmin.start(document);</script>
+</body>
+</html>

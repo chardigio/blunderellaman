@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /t.gif
+
+Sitemap: https://blunderellaman.com/sitemap.xml

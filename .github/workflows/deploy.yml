@@ -1,0 +1,53 @@
+name: Deploy
+
+# Ships site/ to blunderellaman.com. The bucket, CloudFront, and the role this assumes are a CDK
+# stack in the stardust-labs repo (services/website_blunderellaman_dot_com). The role trusts
+# only this repo's main branch, so a pull request can run the tests but cannot deploy.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  BUCKET: blunderellaman-com-content-bucket
+  DOMAIN: blunderellaman.com
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm test
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-2
+
+      # admin/data/ holds the stats that the hourly job writes. It is not in git, so without the
+      # exclude, --delete would remove it on every deploy. (The role also denies writes there.)
+      - name: Sync site to S3
+        run: |
+          aws s3 sync site/ "s3://$BUCKET/" --delete --exclude "admin/data/*" \
+            --cache-control "public, max-age=0, must-revalidate"
+
+      - name: Clear the CloudFront cache
+        run: |
+          id=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?Aliases.Items && contains(Aliases.Items, '$DOMAIN')].Id | [0]" \
+            --output text)
+          test -n "$id" && test "$id" != "None"
+          aws cloudfront create-invalidation --distribution-id "$id" --paths "/*"
