@@ -1,5 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+<!--
+       .::.
+      .::::.
+     ::::::::
+    ::::::::::
+    '::::::::'
+     '::::::'
+       ||||
+      /||||\
+     /||||||\
+    /||||||||\
+   /||||||||||\
+  '------------'
+      pawn
+-->
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -247,7 +262,7 @@ footer{margin-top:40px;text-align:center;font-size:13px;color:var(--muted)}
     { key: "chess_daily",  label: "Daily",  icon: "☀" },
   ];
 
-  const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&","<":"<",">":">",'"':""","'":"&#39;"}[c]));
 
   async function getJSON(url){
     const r = await fetch(url, { cache: "no-store" });
