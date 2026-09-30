@@ -24,8 +24,14 @@ test('Instagram goes to @blunderellaman', () => {
 });
 
 test('the other links keep their targets', () => {
-	assert.equal(link('twitch').href, 'https://www.twitch.tv/digimate');
-	assert.equal(link('youtube').href, 'https://www.youtube.com/@digimatechess');
-	assert.equal(link('tiktok').href, 'https://www.tiktok.com/@digimatelive');
+	assert.equal(link('twitch').href, 'https://www.twitch.tv/blunderellaman');
+	assert.equal(link('youtube').href, 'https://www.youtube.com/@blunderellaman');
+	assert.equal(link('tiktok').href, 'https://www.tiktok.com/@blunderellaman');
 	assert.equal(link('chesscom').href, 'https://www.chess.com/member/blunderellaman');
+});
+
+test('the rebranded links show blunderellaman handles', () => {
+	assert.equal(link('twitch').handle, 'twitch.tv/blunderellaman');
+	assert.equal(link('youtube').handle, '@blunderellaman');
+	assert.equal(link('tiktok').handle, '@blunderellaman');
 });

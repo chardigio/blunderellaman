@@ -1,7 +1,7 @@
 {
   "name": "blunderellaman",
   "private": true,
-  "description": "blunderellaman.com: the digimate chess stream link page",
+  "description": "blunderellaman.com: the blunderellaman chess stream link page",
   "scripts": {
     "test": "node --test test/*.test.js",
     "serve": "cd site && python3 -m http.server 8000"

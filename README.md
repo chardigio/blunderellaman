@@ -1,6 +1,6 @@
 # blunderellaman.com
 
-The link page for **digimate**: chess on Twitch, YouTube, TikTok and Instagram, plus a live
+The link page for **blunderellaman**: chess on Twitch, YouTube, TikTok and Instagram, plus a live
 chess.com rating tracker for [blunderellaman](https://www.chess.com/member/blunderellaman).
 
 Hand-written static HTML. There is no build step and no server.

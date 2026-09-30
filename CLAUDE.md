@@ -1,6 +1,6 @@
 # blunderellaman.com
 
-Static link page for the digimate chess streams. Read `README.md` first.
+Static link page for the blunderellaman chess streams. Read `README.md` first.
 
 * No build step, no framework, no dependencies. Keep it that way.
 * Run `npm test` after every change. Tests use `node:test`.
