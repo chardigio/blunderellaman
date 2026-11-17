@@ -35,3 +35,18 @@ test('the rebranded links show blunderellaman handles', () => {
 	assert.equal(link('youtube').handle, '@blunderellaman');
 	assert.equal(link('tiktok').handle, '@blunderellaman');
 });
+
+test('the business email section shows the address with a mailto link', () => {
+	const match = html.match(
+		/<section class="contact"[\s\S]*?<a data-link="email" href="([^"]+)"[^>]*>([^<]+)<\/a>[\s\S]*?<\/section>/,
+	);
+	assert.ok(match, 'no section.contact with an a[data-link="email"] in site/index.html');
+	assert.equal(match[1], 'mailto:digimatechess@gmail.com');
+	assert.equal(match[2].trim(), 'digimatechess@gmail.com');
+	assert.match(match[0], /Business inquiries/);
+});
+
+test('the email link has a label on the stats page', () => {
+	const admin = fs.readFileSync(path.join(__dirname, '..', 'site', 'admin', 'admin.js'), 'utf8');
+	assert.match(admin, /\bemail: '[^']+'/);
+});
