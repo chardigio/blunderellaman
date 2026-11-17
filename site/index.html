@@ -157,24 +157,6 @@ button:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
 .skeleton .rating{color:transparent;background:linear-gradient(90deg,var(--line),var(--board-dark),var(--line));background-size:200% 100%;border-radius:8px;animation:shimmer 1.2s infinite;width:60%}
 @keyframes shimmer{to{background-position:-200% 0}}
 
-/* ---------- business email ---------- */
-.contact{
-  margin-top:20px;
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:20px;
-  padding:20px;
-}
-.contact h2{margin:0 0 4px;font-size:20px;font-weight:800;letter-spacing:-.02em}
-.contact p{margin:0 0 10px;font-size:15px;color:var(--muted)}
-.contact a{
-  color:var(--text);font-weight:600;font-size:18px;
-  text-decoration:none;border-bottom:2px solid var(--pink);
-  overflow-wrap:anywhere;
-}
-.contact a:hover{color:var(--pink)}
-.contact a:focus-visible{outline:2px solid var(--pink);outline-offset:3px}
-
 footer{margin-top:40px;text-align:center;font-size:13px;color:var(--muted)}
 
 @media (prefers-reduced-motion:reduce){
@@ -218,6 +200,10 @@ footer{margin-top:40px;text-align:center;font-size:13px;color:var(--muted)}
       <span class="sq" style="background:#3FCB8E">♟</span>
       <span><span class="name">Play me on chess.com</span><span class="handle">blunderellaman</span></span>
       <span class="go" aria-hidden="true">↗</span></a></li>
+    <li><a data-link="email" href="mailto:digimatechess@gmail.com">
+      <span class="sq" style="background:#2B2760">✉</span>
+      <span><span class="name">Business email</span><span class="handle">digimatechess@gmail.com</span></span>
+      <span class="go" aria-hidden="true">↗</span></a></li>
   </ul>
 
   <section class="tracker" aria-labelledby="t-title">
@@ -243,12 +229,6 @@ footer{margin-top:40px;text-align:center;font-size:13px;color:var(--muted)}
       <span class="updated" id="updated"></span>
       <button type="button" id="refresh">Refresh</button>
     </div>
-  </section>
-
-  <section class="contact" aria-labelledby="c-title">
-    <h2 id="c-title">Business inquiries</h2>
-    <p>Sponsorships, collabs and everything else.</p>
-    <a data-link="email" href="mailto:digimatechess@gmail.com">digimatechess@gmail.com</a>
   </section>
 
   <footer>Ratings update automatically every few minutes.</footer>
