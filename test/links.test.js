@@ -36,14 +36,22 @@ test('the rebranded links show blunderellaman handles', () => {
 	assert.equal(link('tiktok').handle, '@blunderellaman');
 });
 
-test('the business email section shows the address with a mailto link', () => {
-	const match = html.match(
-		/<section class="contact"[\s\S]*?<a data-link="email" href="([^"]+)"[^>]*>([^<]+)<\/a>[\s\S]*?<\/section>/,
-	);
-	assert.ok(match, 'no section.contact with an a[data-link="email"] in site/index.html');
-	assert.equal(match[1], 'mailto:digimatechess@gmail.com');
-	assert.equal(match[2].trim(), 'digimatechess@gmail.com');
-	assert.match(match[0], /Business inquiries/);
+test('the business email is a link block directly under chess.com', () => {
+	assert.deepEqual(link('email'), {
+		href: 'mailto:digimatechess@gmail.com',
+		handle: 'digimatechess@gmail.com',
+	});
+	const list = html.match(/<ul class="links">([\s\S]*?)<\/ul>/);
+	assert.ok(list, 'no ul.links in site/index.html');
+	const order = [...list[1].matchAll(/data-link="([^"]+)"/g)].map(m => m[1]);
+	assert.equal(order[order.indexOf('chesscom') + 1], 'email');
+	assert.match(list[1], /<span class="name">Business email<\/span>/);
+});
+
+test('the old business inquiries card is gone', () => {
+	assert.doesNotMatch(html, /class="contact"/);
+	assert.doesNotMatch(html, /\.contact\b/);
+	assert.doesNotMatch(html, /Business inquiries/);
 });
 
 test('the email link has a label on the stats page', () => {
