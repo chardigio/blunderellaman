@@ -53,6 +53,7 @@
 		chesscom: 'chess.com profile',
 		chesscom_tracker: 'chess.com (rating card)',
 		game: 'A recent game',
+		email: 'Business email',
 	};
 	const DEVICE_LABELS = {mobile: 'Phone', tablet: 'Tablet', desktop: 'Computer'};
 	const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
