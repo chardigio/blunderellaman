@@ -53,6 +53,8 @@ button:focus-visible,input:focus-visible,.bar:focus-visible{outline:2px solid va
 /* dashboard */
 .head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:18px}
 .head .sub{color:var(--muted);font-size:14px;margin-top:2px}
+.head-links{display:flex;gap:10px;align-items:center}
+.head-links a{color:var(--board-light);font-size:14px}
 #ranges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
 #ranges button[aria-pressed=true]{background:var(--board-light);border-color:var(--board-light);color:var(--ink)}
 #tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
@@ -112,7 +114,10 @@ td.empty{text-align:left;color:var(--muted);white-space:normal;width:auto}
         <h1>blunderellaman stats</h1>
         <div class="sub" id="updated"></div>
       </div>
-      <button type="button" id="signout">Sign out</button>
+      <div class="head-links">
+        <a href="/admin/queue/">Shorts queue</a>
+        <button type="button" id="signout">Sign out</button>
+      </div>
     </div>
     <div id="ranges" role="group" aria-label="Time range"></div>
     <div id="tiles"></div>

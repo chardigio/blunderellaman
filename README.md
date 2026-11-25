@@ -10,6 +10,8 @@ Hand-written static HTML. There is no build step and no server.
 | `site/index.html` | The link page and the rating tracker (reads the public chess.com API in the browser) |
 | `site/beacon.js` | Sends a view and each link tap as a request for `/t.gif` |
 | `site/admin/` | The stats page. It asks for a passphrase |
+| `site/admin/queue/` | The shorts review queue. Email-code sign-in, through the admin API |
+| `site/admin/api.js` | The sign-in and the client for the admin API at `api.blunderellaman.com`. Shared by every admin page that uses the API |
 | `site/404.html`, `site/robots.txt`, `site/sitemap.xml` | The usual |
 
 ## Run it
@@ -45,3 +47,15 @@ same key vector.
 To tag a link you post, add `?utm_source=<name>`, for example
 `https://blunderellaman.com/?utm_source=tiktok_bio`. The name shows on the stats page.
 The admin panel has a Share links section with a ready-to-copy tagged link for each platform.
+
+## The shorts queue
+
+After each stream the clip bot uploads its cuts to the admin API. At `/admin/queue/` a reviewer
+accepts or rejects each clip and can fix its title or set its time. The API gives each accepted
+clip a time (three slots a day: 11 am, 3 pm and 7 pm Eastern) and plans the queue again after
+every change, so the page never computes a schedule.
+
+Only the emails on a list in the private stardust-labs repo can sign in, so this repo holds no
+list and no secret. The API, the schedule rules, and the publisher are in
+`services/blunderellaman/` there. To try the page locally, run that API on port 5558 (see its
+README) and `npm run serve` here: on localhost the page calls `http://127.0.0.1:5558`.
