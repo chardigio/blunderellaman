@@ -12,6 +12,8 @@ Hand-written static HTML. There is no build step and no server.
 | `site/admin/` | The stats page. It asks for a passphrase |
 | `site/admin/queue/` | The shorts review queue. Email-code sign-in, through the admin API |
 | `site/admin/api.js` | The sign-in and the client for the admin API at `api.blunderellaman.com`. Shared by every admin page that uses the API |
+| `site/admin/bot/` | The blunderbot viewer and chat (see below). It signs in with an email code |
+| `site/admin/vendor/` | Third-party files, unchanged: Deep Chat 2.5.1 (MIT) |
 | `site/404.html`, `site/robots.txt`, `site/sitemap.xml` | The usual |
 
 ## Run it
@@ -70,3 +72,17 @@ Only the emails on a list in the private stardust-labs repo can sign in, so this
 list and no secret. The API, the schedule rules, and the publisher are in
 `services/blunderellaman/` there. To try the page locally, run that API on port 5558 (see its
 README) and `npm run serve` here: on localhost the page calls `http://127.0.0.1:5558`.
+
+## blunderbot viewer
+
+`/admin/bot/` shows what blunderbot (the blunderellaman bot on Charlie's Mac) does, and has a
+chat with it. It signs in with the email code from `site/admin/api.js`, then polls
+`GET /bot/feed` on `https://api.blunderellaman.com` and sends with `POST /bot/messages`.
+The Mac posts the bot's activity to that backend; nothing on the Mac accepts a connection.
+The backend and the bot side are in the stardust-labs monorepo (`services/blunderellaman/`
+and `_dev/scripts/imessage-claude/blunderweb/`).
+
+The bubbles are drawn by [Deep Chat](https://github.com/OvidijusParsiunas/deep-chat), vendored
+as one file in `site/admin/vendor/` so the site keeps no build step. `site/admin/bot.js`
+decides what goes in them, and `test/bot.test.js` tests it. Every feed value is escaped
+there, because Deep Chat puts the HTML into the page as it is.
