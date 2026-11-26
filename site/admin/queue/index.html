@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>blunderellaman shorts queue</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♞</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16133A;
+  --board-light:#DCD6F7;
+  --pink:#FF4F9A;
+  --text:#F6F4FF;
+  --muted:#B4ADE0;
+  --panel:#1E1A4A;
+  --line:#3A3478;
+  --loss:#FF6B6B;
+  --font:"Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0;background:var(--ink);color:var(--text);
+  font-family:var(--font);font-size:16px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+main{margin:0 auto}
+h1{margin:0;font-size:32px;font-weight:800;letter-spacing:-.03em}
+h2{margin:0 0 4px;font-size:20px;font-weight:800;letter-spacing:-.01em}
+a{color:var(--board-light)}
+[hidden]{display:none!important}
+button,input,textarea{font:inherit}
+button{
+  background:transparent;color:var(--text);border:1px solid var(--line);
+  border-radius:10px;padding:8px 14px;cursor:pointer;font-size:14px;font-weight:600;
+}
+button:hover{border-color:var(--pink)}
+button.primary{background:var(--pink);border-color:var(--pink);color:var(--ink)}
+button.small{padding:3px 8px;font-size:12px}
+button:disabled{opacity:.6;cursor:progress}
+button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
+input,textarea{
+  width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);
+  background:var(--ink);color:var(--text);font-size:16px;min-width:0;
+}
+input[type=datetime-local]{color-scheme:dark}
+
+/* sign-in, drawn by BlunderApi.mountSignIn */
+.bl-signin{max-width:380px;margin:12vh auto 0;display:grid;gap:14px}
+.bl-signin p{margin:0;color:var(--muted)}
+.bl-signin input{padding:12px 14px;border-radius:12px;background:var(--panel);font-size:17px}
+.bl-signin button[type=submit]{background:var(--pink);border-color:var(--pink);color:var(--ink);padding:12px}
+.bl-signin .bl-back{justify-self:start;border:none;padding:0;color:var(--muted);font-weight:400;text-decoration:underline}
+.bl-signin .bl-error{color:var(--loss);font-size:14px}
+
+/* page */
+main{max-width:1360px;padding:max(14px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 80px max(16px,env(safe-area-inset-left))}
+.bar{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.bar h1{font-size:22px;white-space:nowrap}
+#summary{margin:0;flex:1 1 320px;min-width:0;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;
+  padding:6px 12px;background:var(--panel);border:1px solid var(--line);border-radius:999px;overflow-wrap:anywhere}
+.bar .links{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:14px;margin-left:auto}
+.bar .who{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+#updated{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+#page.busy .actions button{pointer-events:none;opacity:.6}
+
+/* toast */
+#status{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:30;
+  margin:0;max-width:calc(100% - 32px);padding:8px 16px;border-radius:999px;background:var(--text);color:var(--ink);
+  font-size:14px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+#status.error{background:var(--loss);color:#fff;border-radius:12px}
+
+kbd{font:600 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;border:1px solid var(--line);border-bottom-width:2px;
+  border-radius:5px;padding:2px 5px;margin-left:7px;color:var(--muted);vertical-align:1px}
+button.primary kbd{color:var(--ink);border-color:rgba(22,19,58,.35)}
+
+/* layout: review grid on the left, the rest in a sticky side column */
+.tabs{display:none}
+#groups{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,430px);gap:28px;align-items:start}
+.col-side{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow-y:auto;display:grid;grid-template-columns:minmax(0,1fr);gap:26px;padding-right:2px}
+.col-main,.col-side > *{min-width:0}
+.group h2{display:flex;align-items:baseline;gap:8px;margin:0 0 2px;font-size:15px;text-transform:uppercase;letter-spacing:.06em}
+.n{font-size:12px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:0}
+.group .hint{margin:0 0 10px;font-size:13px;color:var(--muted)}
+.group .empty{margin:8px 0 0;color:var(--muted);font-size:14px}
+.sel{box-shadow:inset 0 0 0 2px var(--pink)}
+
+/* review cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:12px}
+.clip{display:grid;grid-template-columns:150px minmax(0,1fr);grid-template-rows:1fr auto;gap:10px 14px;
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:12px}
+.cards .clip{margin-bottom:0}
+.clip.due{border-color:var(--pink)}
+.clip video,.clip .novideo{grid-row:1/3;width:100%;aspect-ratio:9/16;border-radius:9px;background:#000;display:block;object-fit:cover}
+.novideo{display:grid;place-items:center;color:var(--muted);font-size:13px}
+.body{display:grid;gap:8px;align-content:start;min-width:0}
+.clip .actions{grid-column:2}
+.clip .when{font-weight:800;font-size:16px}
+.meta{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.note{margin:0;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.field{display:grid;gap:3px;font-size:12px;color:var(--muted)}
+.field > span{display:flex;justify-content:space-between}
+.count{font-variant-numeric:tabular-nums}
+.field input,.field textarea{padding:8px 10px;font-size:15px}
+.field textarea{resize:none;line-height:1.35;display:block}
+.actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.err{color:var(--loss);font-size:13px;flex-basis:100%}
+.copyrow{display:flex;gap:8px;align-items:center;min-width:0}
+.copyrow code{flex:1;min-width:0;overflow-wrap:anywhere;background:var(--ink);border:1px solid var(--line);
+  border-radius:8px;padding:6px 9px;font-size:14px;font-family:var(--font)}
+.download{font-size:13px}
+
+/* compact rows: scheduled, going out, done */
+.list,.done{list-style:none;margin:0;padding:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.row,.done-row{border-top:1px solid var(--line)}
+.row:first-child,.done-row:first-child{border-top:none}
+.row summary{list-style:none;display:flex;align-items:baseline;gap:10px;padding:9px 12px;cursor:pointer;min-width:0}
+.row summary::-webkit-details-marker{display:none}
+.row summary:hover{background:rgba(255,255,255,.03)}
+.row[open] summary{background:rgba(255,255,255,.04)}
+.slot{font-weight:800;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rel{font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;min-width:3.2em}
+.tag{font-size:11px;font-weight:600;color:var(--pink);border:1px solid currentColor;border-radius:999px;padding:0 6px}
+.row-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.row-body{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;padding:4px 12px 12px}
+.row-body video,.row-body .novideo{width:96px;aspect-ratio:9/16;border-radius:8px;background:#000;object-fit:cover}
+.row.going{padding:9px 12px;display:grid;gap:6px}
+.row-line{display:flex;gap:10px;align-items:baseline;min-width:0}
+.plat-states{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:13px}
+.plat-states li{overflow-wrap:anywhere}
+.plat-states li.err{flex-basis:auto}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);margin-right:8px;vertical-align:1px}
+.dot.posted{background:#5BE49B}
+.dot.failed{background:var(--loss)}
+.dot.submitted{background:var(--pink);animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.3}}
+@media (prefers-reduced-motion:reduce){.dot.submitted{animation:none}}
+.done-row{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 12px;flex-wrap:wrap}
+.done-main{display:grid;min-width:0;flex:1}
+.plat{font-size:13px;white-space:nowrap}
+
+/* shortcut help */
+#keys-btn{padding:4px 10px;font-size:13px}
+dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:20px 22px;width:min(420px,calc(100% - 32px))}
+dialog::backdrop{background:rgba(10,8,30,.7)}
+dialog h2{font-size:18px;margin-bottom:12px}
+.keylist{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0 0 16px;font-size:14px}
+.keylist dt{white-space:nowrap}
+.keylist dt kbd{margin:0 4px 0 0}
+.keylist dd{margin:0;color:var(--muted)}
+
+/* no keyboard: no key hints */
+@media (hover:none),(pointer:coarse){kbd,#keys-btn{display:none}}
+
+/* phone and narrow windows: one tab at a time */
+@media (max-width:959px){
+  .bar{padding-bottom:10px;margin-bottom:0;border-bottom:none}
+  .bar .who,#updated{display:none}
+  .bar h1{font-size:20px}
+  #summary{order:3;flex-basis:100%;border-radius:12px;font-size:13px}
+  .tabs{display:flex;gap:6px;position:sticky;top:0;z-index:10;background:var(--ink);
+    margin:0 -16px 14px;padding:8px 16px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+  .tabs button{flex:1 1 auto;min-height:38px;padding:6px 8px;border-radius:999px;font-size:13px;white-space:nowrap}
+  .tabs button[aria-selected=true]{background:var(--text);border-color:var(--text);color:var(--ink)}
+  .tabs button[aria-selected=true] .n{color:var(--ink)}
+  #groups{display:block}
+  .col-side{position:static;max-height:none;overflow:visible;display:block}
+  .group{display:none}
+  #groups[data-tab=review] [data-section=review],
+  #groups[data-tab=postNow] [data-section=postNow],
+  #groups[data-tab=scheduled] [data-section=scheduled],
+  #groups[data-tab=done] [data-section=done]{display:block}
+  .group h2{display:none}
+  .group .hint{font-size:12px}
+  .cards{grid-template-columns:1fr}
+  .clip{grid-template-columns:112px minmax(0,1fr);grid-template-rows:auto auto}
+  .clip video,.clip .novideo{grid-row:1}
+  .clip .actions{grid-column:1/-1}
+  .clip .actions button{flex:1;min-height:44px;font-size:15px}
+  .row summary{padding:12px}
+  .row-body .actions button{min-height:40px}
+  .done-row{padding:10px 12px}
+}
+</style>
+</head>
+<body>
+<main>
+  <div id="signin" hidden></div>
+
+  <div id="page" hidden>
+    <header class="bar">
+      <h1>Shorts queue</h1>
+      <p id="summary" aria-live="polite"></p>
+      <div class="links">
+        <span id="updated"></span>
+        <a href="/admin/">Stats</a>
+        <a href="/admin/bot/">blunderbot</a>
+        <button type="button" id="keys-btn" title="Keyboard shortcuts">Keys <kbd>?</kbd></button>
+        <button type="button" id="signout" class="small">Sign out</button>
+      </div>
+      <div class="who" id="who"></div>
+    </header>
+    <nav id="tabs" class="tabs" role="tablist" aria-label="Queue sections"></nav>
+    <div id="groups"></div>
+    <p id="status" role="status" hidden></p>
+    <dialog id="keys" aria-labelledby="keys-title">
+      <h2 id="keys-title">Keyboard shortcuts</h2>
+      <dl class="keylist">
+        <dt><kbd>J</kbd><kbd>K</kbd></dt><dd>Next or previous clip</dd>
+        <dt><kbd>Space</kbd></dt><dd>Play or pause the clip</dd>
+        <dt><kbd>F</kbd></dt><dd>Full screen</dd>
+        <dt><kbd>A</kbd></dt><dd>Accept</dd>
+        <dt><kbd>X</kbd></dt><dd>Reject</dd>
+        <dt><kbd>E</kbd></dt><dd>Edit the title</dd>
+        <dt><kbd>T</kbd></dt><dd>Set the time (scheduled)</dd>
+        <dt><kbd>S</kbd></dt><dd>Save (scheduled)</dd>
+        <dt><kbd>U</kbd></dt><dd>Back to review, or restore</dd>
+        <dt><kbd>Enter</kbd></dt><dd>In a title: accept or save</dd>
+        <dt><kbd>Esc</kbd></dt><dd>Leave the field</dd>
+      </dl>
+      <form method="dialog"><button type="submit" class="primary">Close</button></form>
+    </dialog>
+  </div>
+</main>
+<script src="/admin/api.js"></script>
+<script src="/admin/queue/queue.js"></script>
+<script>BlunderQueue.start(document);</script>
+</body>
+</html>
