@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="robots" content="noindex, nofollow">
+<title>blunderbot</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♞</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16133A;
+  --board-light:#DCD6F7;
+  --pink:#FF4F9A;
+  --text:#F6F4FF;
+  --muted:#B4ADE0;
+  --panel:#1E1A4A;
+  --line:#3A3478;
+  --loss:#FF6B6B;
+  --win:#5BE3A4;
+  --font:"Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:ui-monospace, "SF Mono", Menlo, monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--ink);color:var(--text);
+  font-family:var(--font);font-size:16px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+[hidden]{display:none!important}
+button,input{font:inherit}
+button{
+  background:transparent;color:var(--text);border:1px solid var(--line);
+  border-radius:10px;padding:6px 12px;cursor:pointer;font-size:14px;font-weight:600;
+}
+button:hover{border-color:var(--pink)}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
+a{color:var(--muted)}
+
+/* the shared sign-in form from api.js (BlunderApi.mountSignIn) */
+#signin{max-width:380px;margin:12vh auto 0;padding:0 16px}
+.bl-signin{display:grid;gap:14px}
+.bl-signin h1{margin:0;font-size:32px;font-weight:800;letter-spacing:-.03em}
+.bl-signin p{margin:0;color:var(--muted)}
+.bl-signin input{
+  width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);
+  background:var(--panel);color:var(--text);font-size:17px;
+}
+.bl-signin button[type=submit]{background:var(--pink);border-color:var(--pink);color:var(--ink);padding:12px}
+.bl-signin button:disabled{opacity:.6;cursor:progress}
+.bl-error{color:var(--loss);margin:0;font-size:14px}
+.bl-back{justify-self:start;border:0;padding:0;color:var(--muted);text-decoration:underline}
+
+/* the viewer */
+#view{display:flex;flex-direction:column;height:100dvh;max-width:760px;margin:0 auto;
+  padding:max(12px,env(safe-area-inset-top)) 12px max(8px,env(safe-area-inset-bottom))}
+.head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 4px 10px;flex-wrap:wrap}
+.head h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.03em}
+.head .sub{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
+#status::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--win);margin-right:6px}
+#status.offline::before{background:var(--loss)}
+.head nav{display:flex;align-items:center;gap:10px;font-size:14px}
+#who{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46vw}
+#chat{flex:1;min-height:0;width:100%;border:1px solid var(--line)!important;border-radius:16px;background:var(--panel)!important}
+</style>
+</head>
+<body>
+<main id="signin" hidden></main>
+
+<div id="view" hidden>
+  <header class="head">
+    <div>
+      <h1>blunderbot</h1>
+      <div class="sub"><span id="status">Loading</span></div>
+    </div>
+    <nav>
+      <a href="/admin/">Stats</a>
+      <a href="/admin/queue/">Shorts queue</a>
+      <span id="who"></span>
+      <button id="signout" type="button">Sign out</button>
+    </nav>
+  </header>
+  <deep-chat id="chat"
+    style="height:100%"
+  ></deep-chat>
+</div>
+
+<script src="/admin/api.js"></script>
+<script src="/admin/bot.js"></script>
+<script type="module">
+import '/admin/vendor/deep-chat-2.5.1.js';
+await customElements.whenDefined('deep-chat');
+window.BlunderBot.start(document);
+</script>
+</body>
+</html>
