@@ -55,6 +55,12 @@ accepts or rejects each clip and can fix its title or set its time. The API give
 clip a time (three slots a day: 11 am, 3 pm and 7 pm Eastern) and plans the queue again after
 every change, so the page never computes a schedule.
 
+When a clip's time comes, Upload-Post posts it to YouTube Shorts and TikTok. The page shows
+it under "Going out now" with each platform's state (sending, posted with a link, or failed
+with the reason and the next try), and updates each minute. Nothing is manual. If the API
+runs the `manual` fallback publisher, the page shows "Post now" with an "I posted it" button
+for each platform.
+
 Only the emails on a list in the private stardust-labs repo can sign in, so this repo holds no
 list and no secret. The API, the schedule rules, and the publisher are in
 `services/blunderellaman/` there. To try the page locally, run that API on port 5558 (see its

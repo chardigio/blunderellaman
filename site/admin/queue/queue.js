@@ -5,8 +5,10 @@
 // slots a day, Eastern) and plans the whole queue again after every change, so this page never
 // computes a schedule: it shows the server's plan and sends edits.
 //
-// Until a real publisher is in place, a clip whose time comes shows up under "Post now". The
-// reviewer posts it by hand and taps the button for each platform.
+// When a clip's time comes, the server's publisher posts it. With Upload-Post (the deployed
+// publisher) the page shows "Going out now" with each platform's state, and nothing is
+// manual. With the `manual` fallback the page shows "Post now", and the reviewer posts the
+// clip by hand and taps the button for each platform.
 //
 // Shipped as a file, not an inline <script>, so the Node tests load exactly what the page runs.
 (function (global) {
@@ -16,6 +18,8 @@
 	const PLATFORMS = ['youtube', 'tiktok'];
 	const PLATFORM_LABELS = {youtube: 'YouTube Shorts', tiktok: 'TikTok'};
 	const DAY_MS = 86400000;
+	// The server tries a failed post again after this long (publisher.RETRY_AFTER).
+	const RETRY_MS = 30 * 60000;
 
 	const etFormat = new Intl.DateTimeFormat('en-US', {
 		timeZone: TZ, weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
@@ -91,6 +95,32 @@
 		});
 	}
 
+	// Any post row means the clip's time came and the publisher has it.
+	function inFlight(c) {
+		return c.status === 'accepted' && !fullyPosted(c) && PLATFORMS.some(p => postStatus(c, p) !== null);
+	}
+
+	function isManual(queue) {
+		return queue.publisher === 'manual';
+	}
+
+	// One line for each platform on a "Going out now" card.
+	function platformState(c, platform, queue) {
+		const label = PLATFORM_LABELS[platform];
+		const post = c.posts && c.posts[platform];
+		if (!post) return {text: 'Waiting to send to ' + label + '.'};
+		if (post.status === 'posted') return {text: 'Posted on ' + label + '.', url: post.external_url || null};
+		if (post.status === 'submitted') return {text: 'Sending to ' + label + '.'};
+		if (post.status === 'failed') {
+			const next = post.at ? formatSlot(new Date(Date.parse(post.at) + RETRY_MS).toISOString(), queue.now) : null;
+			return {
+				text: label + ' failed: ' + (post.error || 'no reason given') + (next ? ' The next try is ' + next + '.' : ''),
+				error: true,
+			};
+		}
+		return {text: label + ': ' + post.status + '.'};
+	}
+
 	function byTime(a, b) {
 		return String(a.scheduled_at || '').localeCompare(String(b.scheduled_at || ''));
 	}
@@ -99,7 +129,7 @@
 		const out = {postNow: [], review: [], scheduled: [], done: []};
 		for (const c of queue.clips || []) {
 			if (c.status === 'rejected' || (c.status === 'accepted' && fullyPosted(c))) out.done.push(c);
-			else if (c.status === 'accepted' && platformsToPost(c).length) out.postNow.push(c);
+			else if (inFlight(c)) out.postNow.push(c);
 			else if (c.status === 'accepted') out.scheduled.push(c);
 			else out.review.push(c);
 		}
@@ -193,6 +223,21 @@
 			'<div class="actions">' + buttons + '</div></div></article>';
 	}
 
+	function goingOutCard(c, queue) {
+		const lines = PLATFORMS.map(p => {
+			const st = platformState(c, p, queue);
+			const text = st.url
+				? escapeHtml(st.text) + ' <a href="' + escapeHtml(st.url) + '" target="_blank" rel="noopener">Open</a>'
+				: escapeHtml(st.text);
+			return '<li class="' + (st.error ? 'err' : '') + '">' + text + '</li>';
+		}).join('');
+		return '<article class="clip due" data-id="' + c.id + '">' + video(c) + '<div class="body">' +
+			'<div class="when">Due ' + escapeHtml(formatSlot(c.scheduled_at, queue.now)) + '</div>' +
+			meta(c, queue) +
+			'<p class="going-title">' + escapeHtml(c.title) + '</p>' +
+			'<ul class="plat-states">' + lines + '</ul></div></article>';
+	}
+
 	function doneRow(c, queue) {
 		let state;
 		let actions = '';
@@ -207,8 +252,12 @@
 				const link = post && post.external_url
 					? '<a href="' + escapeHtml(post.external_url) + '" target="_blank" rel="noopener">' + label + '</a>'
 					: label;
-				return '<span class="plat">' + link +
-					' <button type="button" class="small" data-action="unpost" data-platform="' + p + '">Undo</button></span>';
+				// Undo is for a mis-tap in the manual flow. With a real publisher it would post
+				// the clip a second time.
+				const undo = isManual(queue)
+					? ' <button type="button" class="small" data-action="unpost" data-platform="' + p + '">Undo</button>'
+					: '';
+				return '<span class="plat">' + link + undo + '</span>';
 			}).join('');
 		}
 		return '<li class="done-row" data-id="' + c.id + '"><div><strong>' + escapeHtml(c.title) + '</strong>' +
@@ -224,8 +273,13 @@
 		const s = sections(queue);
 		root.querySelector('#summary').textContent = summaryLine(queue);
 		root.querySelector('#groups').innerHTML =
-			(s.postNow.length ? section('Post now', 'These are due. Post each one, then tap the button for each platform.',
-				s.postNow.map(c => postNowCard(c, queue)).join('')) : '') +
+			(s.postNow.length
+				? (isManual(queue)
+					? section('Post now', 'These are due. Post each one, then tap the button for each platform.',
+						s.postNow.map(c => postNowCard(c, queue)).join(''))
+					: section('Going out now', 'Upload-Post sends these to YouTube Shorts and TikTok. This page updates each minute.',
+						s.postNow.map(c => goingOutCard(c, queue)).join('')))
+				: '') +
 			section('To review', 'Accept the clips you want. Fix a title before you accept it.',
 				s.review.map(c => reviewCard(c, queue)).join(''), 'No clips to review.') +
 			section('Scheduled', 'Times are Eastern. Three a day: 11 am, 3 pm and 7 pm. Set a time to move a clip; the others move around it.',
@@ -276,12 +330,17 @@
 			}
 		}
 
+		let lastQueue = null;
+
 		async function load() {
 			page.hidden = false;
 			doc.getElementById('who').textContent = client.email();
 			try {
 				const queue = await call('GET', '/clips');
-				if (queue) renderQueue(page, queue);
+				if (queue) {
+					lastQueue = queue;
+					renderQueue(page, queue);
+				}
 			} catch (err) {
 				say(err.message, true);
 			}
@@ -295,6 +354,7 @@
 			try {
 				const queue = await call(method, path, body);
 				if (queue) {
+					lastQueue = queue;
 					renderQueue(page, queue);
 					say(done || 'Saved.');
 				}
@@ -342,12 +402,20 @@
 			if (doc.visibilityState === 'visible' && client.signedIn() && !busy) load();
 		});
 
+		// While a clip goes out, show each platform's new state without a reload. Skip the
+		// refresh while the reviewer types, because a re-render would drop the edit.
+		doc.defaultView.setInterval(() => {
+			const typing = doc.activeElement && doc.activeElement.tagName === 'INPUT';
+			if (!busy && !typing && doc.visibilityState === 'visible' && client.signedIn() &&
+				lastQueue && sections(lastQueue).postNow.length) load();
+		}, 60000);
+
 		if (client.signedIn()) load();
 		else showSignIn();
 	}
 
 	const api = {
-		TZ, PLATFORMS, formatSlot, summaryLine, sections, platformsToPost, etWallToUtcIso, utcIsoToEtWall,
+		TZ, PLATFORMS, formatSlot, summaryLine, sections, platformsToPost, platformState, etWallToUtcIso, utcIsoToEtWall,
 		escapeHtml, renderQueue, start,
 	};
 

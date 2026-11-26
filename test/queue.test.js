@@ -86,6 +86,61 @@ test('postedOn lists the platforms that still need a manual post', () => {
 	assert.deepEqual(q.platformsToPost(c), ['youtube']);
 });
 
+test('sections puts a clip that Upload-Post has under going out, until both platforms are posted', () => {
+	const clips = [
+		clip({id: 1, status: 'accepted', scheduled_at: '2026-12-02T16:00:00Z', posts: {youtube: {status: 'submitted'}, tiktok: {status: 'submitted'}}}),
+		clip({id: 2, status: 'accepted', scheduled_at: '2026-12-02T16:00:00Z', posts: {youtube: {status: 'posted'}, tiktok: {status: 'submitted'}}}),
+		clip({id: 3, status: 'accepted', scheduled_at: '2026-12-02T16:00:00Z', posts: {youtube: {status: 'posted'}, tiktok: {status: 'posted'}}}),
+	];
+	const s = q.sections({now: NOW, publisher: 'upload_post', clips});
+	assert.deepEqual(s.postNow.map(c => c.id), [1, 2]);
+	assert.deepEqual(s.done.map(c => c.id), [3]);
+});
+
+test('platformState says what Upload-Post is doing on each platform', () => {
+	const queue = {now: NOW, publisher: 'upload_post'};
+	const c = clip({posts: {
+		youtube: {status: 'posted', external_url: 'https://youtu.be/x'},
+		tiktok: {status: 'failed', error: 'Video too short.', at: '2026-12-02T15:00:00Z'},
+	}});
+	assert.deepEqual(q.platformState(c, 'youtube', queue), {text: 'Posted on YouTube Shorts.', url: 'https://youtu.be/x'});
+	assert.deepEqual(q.platformState(c, 'tiktok', queue), {
+		text: 'TikTok failed: Video too short. The next try is Wed 10:30 am.', error: true,
+	});
+	assert.equal(q.platformState(clip({posts: {youtube: {status: 'submitted'}}}), 'youtube', queue).text, 'Sending to YouTube Shorts.');
+	assert.equal(q.platformState(clip({}), 'tiktok', queue).text, 'Waiting to send to TikTok.');
+});
+
+test('the Upload-Post page has no manual buttons and no undo', () => {
+	const root = fakeRoot();
+	q.renderQueue(root, {now: NOW, publisher: 'upload_post', clips: [
+		clip({id: 1, status: 'accepted', scheduled_at: '2026-12-02T14:00:00Z', posts: {youtube: {status: 'submitted'}, tiktok: null}}),
+		clip({id: 2, status: 'accepted', scheduled_at: '2026-12-01T16:00:00Z', posts: {youtube: {status: 'posted'}, tiktok: {status: 'posted'}}}),
+	]});
+	const html = root.groups.innerHTML;
+	assert.match(html, /Going out now/);
+	assert.match(html, /Sending to YouTube Shorts\./);
+	assert.doesNotMatch(html, /I posted it/);
+	assert.doesNotMatch(html, /data-action="unpost"/);
+	assert.doesNotMatch(html, /Post now/);
+});
+
+test('the manual page keeps the post buttons and undo', () => {
+	const root = fakeRoot();
+	q.renderQueue(root, {now: NOW, publisher: 'manual', clips: [
+		clip({id: 1, status: 'accepted', scheduled_at: '2026-12-02T14:00:00Z', posts: {youtube: {status: 'awaiting_manual'}, tiktok: {status: 'awaiting_manual'}}}),
+		clip({id: 2, status: 'accepted', scheduled_at: '2026-12-01T16:00:00Z', posts: {youtube: {status: 'posted'}, tiktok: {status: 'posted'}}}),
+	]});
+	assert.match(root.groups.innerHTML, /I posted it on TikTok/);
+	assert.match(root.groups.innerHTML, /data-action="unpost"/);
+});
+
+function fakeRoot() {
+	const summary = {textContent: ''};
+	const groups = {innerHTML: ''};
+	return {summary, groups, querySelector: sel => (sel === '#summary' ? summary : groups)};
+}
+
 test('escapeHtml blocks markup in clip titles', () => {
 	assert.equal(q.escapeHtml('<b>"x"</b> & y'), '&lt;b&gt;&quot;x&quot;&lt;/b&gt; &amp; y');
 });
