@@ -21,33 +21,89 @@ test('formatSlot says the Eastern day and time, short within a week', () => {
 	assert.equal(q.formatSlot('2026-12-15T16:00:00Z', NOW), 'Dec 15, 11 am');
 });
 
-test('summaryLine lists when each accepted clip goes out, in order', () => {
+test('summaryLine gives the count, the next slot with how soon, and the last slot', () => {
 	const queue = {now: NOW, clips: [
 		clip({id: 2, status: 'accepted', scheduled_at: '2026-12-02T20:00:00Z'}),
 		clip({id: 1, status: 'accepted', scheduled_at: '2026-12-02T16:00:00Z'}),
+		clip({id: 5, status: 'accepted', scheduled_at: '2026-12-04T00:00:00Z'}),
 		clip({id: 3, status: 'pending'}),
 		clip({id: 4, status: 'rejected'}),
 	]};
-	assert.equal(q.summaryLine(queue), '2 ready. They go out Wed 11 am and Wed 3 pm.');
+	assert.equal(q.summaryLine(queue), '3 ready · next Wed 11 am (in 1h) · last Thu 7 pm');
 });
 
-test('summaryLine with one, three, and none', () => {
-	const at = iso => clip({status: 'accepted', scheduled_at: iso});
-	assert.equal(q.summaryLine({now: NOW, clips: [at('2026-12-02T16:00:00Z')]}), '1 ready. It goes out Wed 11 am.');
+test('summaryLine with one and none', () => {
 	assert.equal(
-		q.summaryLine({now: NOW, clips: [at('2026-12-02T16:00:00Z'), at('2026-12-02T20:00:00Z'), at('2026-12-03T00:00:00Z')]}),
-		'3 ready. They go out Wed 11 am, Wed 3 pm and Wed 7 pm.',
+		q.summaryLine({now: NOW, clips: [clip({status: 'accepted', scheduled_at: '2026-12-02T15:45:00Z'})]}),
+		'1 ready · goes out Wed 10:45 am (in 45m)',
 	);
-	assert.equal(q.summaryLine({now: NOW, clips: [clip({status: 'pending'})]}), 'Nothing is scheduled yet. Accept a clip to give it a time.');
+	assert.equal(q.summaryLine({now: NOW, clips: [clip({status: 'pending'})]}), 'Nothing scheduled. Accept a clip to give it a time.');
 });
 
-test('summaryLine does not count a clip that already went out', () => {
+test('summaryLine does not count a clip that went out or is going out now', () => {
 	const posted = {status: 'posted'};
 	const queue = {now: NOW, clips: [
 		clip({status: 'accepted', scheduled_at: '2026-12-02T11:00:00Z', posts: {youtube: posted, tiktok: posted}}),
+		clip({status: 'accepted', scheduled_at: '2026-12-02T14:00:00Z', posts: {youtube: posted, tiktok: {status: 'submitted'}}}),
 		clip({status: 'accepted', scheduled_at: '2026-12-02T16:00:00Z'}),
 	]};
-	assert.equal(q.summaryLine(queue), '1 ready. It goes out Wed 11 am.');
+	assert.equal(q.summaryLine(queue), '1 ready · goes out Wed 11 am (in 1h)');
+});
+
+test('relTime says how soon, in minutes, hours, or days', () => {
+	assert.equal(q.relTime('2026-12-02T14:00:00Z', NOW), 'now');
+	assert.equal(q.relTime('2026-12-02T15:00:00Z', NOW), 'now');
+	assert.equal(q.relTime('2026-12-02T15:20:00Z', NOW), 'in 20m');
+	assert.equal(q.relTime('2026-12-02T20:00:00Z', NOW), 'in 5h');
+	assert.equal(q.relTime('2026-12-04T15:00:00Z', NOW), 'in 2d');
+});
+
+test('defaultTab opens on the work that waits for the reviewer', () => {
+	assert.equal(q.defaultTab({review: 2, postNow: 1, scheduled: 3, done: 0}), 'review');
+	assert.equal(q.defaultTab({review: 0, postNow: 1, scheduled: 3, done: 0}), 'postNow');
+	assert.equal(q.defaultTab({review: 0, postNow: 0, scheduled: 0, done: 4}), 'scheduled');
+});
+
+test('keyAction maps keys, and only Enter and Escape work inside a field', () => {
+	const k = (key, more) => Object.assign({key, metaKey: false, ctrlKey: false, altKey: false}, more);
+	assert.equal(q.keyAction(k('j'), false), 'next');
+	assert.equal(q.keyAction(k('k'), false), 'prev');
+	assert.equal(q.keyAction(k('a'), false), 'accept');
+	assert.equal(q.keyAction(k('x'), false), 'reject');
+	assert.equal(q.keyAction(k(' '), false), 'play');
+	assert.equal(q.keyAction(k('?'), false), 'help');
+	assert.equal(q.keyAction(k('A'), false), null);
+	assert.equal(q.keyAction(k('a', {metaKey: true}), false), null);
+	assert.equal(q.keyAction(k('a'), true), null);
+	assert.equal(q.keyAction(k('Enter'), true), 'submit');
+	assert.equal(q.keyAction(k('Enter', {metaKey: true}), true), 'submit');
+	assert.equal(q.keyAction(k('Escape'), true), 'blur');
+});
+
+test('renderQueue draws a tab for each section with its count, and Going out only when a clip goes out', () => {
+	const root = fakeRoot();
+	const out = q.renderQueue(root, {now: NOW, publisher: 'upload_post', clips: [
+		clip({id: 1, status: 'pending'}),
+		clip({id: 2, status: 'accepted', scheduled_at: '2026-12-02T20:00:00Z'}),
+	]});
+	assert.equal(out.tab, 'review');
+	assert.match(root.tabs.innerHTML, /data-tab="review" aria-selected="true">Review <span class="n">1<\/span>/);
+	assert.match(root.tabs.innerHTML, /data-tab="scheduled" aria-selected="false">Scheduled <span class="n">1<\/span>/);
+	assert.doesNotMatch(root.tabs.innerHTML, /data-tab="postNow"/);
+	assert.match(root.groups.innerHTML, /data-section="review"/);
+	assert.match(root.groups.innerHTML, /<details class="row" data-id="2" data-kind="scheduled">/);
+
+	q.renderQueue(root, {now: NOW, publisher: 'upload_post', clips: [
+		clip({id: 3, status: 'accepted', scheduled_at: '2026-12-02T14:00:00Z', posts: {youtube: {status: 'submitted'}, tiktok: null}}),
+	]}, 'scheduled');
+	assert.match(root.tabs.innerHTML, /data-tab="postNow" aria-selected="false">Going out <span class="n">1<\/span>/);
+	assert.match(root.tabs.innerHTML, /data-tab="scheduled" aria-selected="true"/);
+});
+
+test('a title shows how many of its 100 characters it uses', () => {
+	const root = fakeRoot();
+	q.renderQueue(root, {now: NOW, clips: [clip({id: 1, title: 'Queen sac'})]});
+	assert.match(root.groups.innerHTML, /<span class="count">9\/100<\/span>/);
 });
 
 test('etWallToUtcIso reads a datetime-local value as Eastern time, across DST', () => {
@@ -136,9 +192,8 @@ test('the manual page keeps the post buttons and undo', () => {
 });
 
 function fakeRoot() {
-	const summary = {textContent: ''};
-	const groups = {innerHTML: ''};
-	return {summary, groups, querySelector: sel => (sel === '#summary' ? summary : groups)};
+	const els = {'#summary': {textContent: ''}, '#tabs': {innerHTML: ''}, '#groups': {innerHTML: ''}};
+	return {summary: els['#summary'], tabs: els['#tabs'], groups: els['#groups'], querySelector: sel => els[sel]};
 }
 
 test('escapeHtml blocks markup in clip titles', () => {

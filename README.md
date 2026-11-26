@@ -61,6 +61,11 @@ with the reason and the next try), and updates each minute. Nothing is manual. I
 runs the `manual` fallback publisher, the page shows "Post now" with an "I posted it" button
 for each platform.
 
+On a wide screen the page shows the clips to review in a grid, with "Going out now",
+"Scheduled" and "Done" in a side column. On a phone it shows one tab at a time. The page has
+keyboard shortcuts (press `?` for the list): `J` and `K` move between clips, `A` accepts, `X`
+rejects, `E` edits the title, and Enter in a title accepts or saves.
+
 Only the emails on a list in the private stardust-labs repo can sign in, so this repo holds no
 list and no secret. The API, the schedule rules, and the publisher are in
 `services/blunderellaman/` there. To try the page locally, run that API on port 5558 (see its
